@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>崇華十四期課堂測驗</title>
+    <style>
+        body {
+            font-family: '標楷體', 'BiauKai', serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: #fff;
+            padding: 20px 40px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            color: #4CAF50;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section h2 {
+            font-size: 1.8em;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 5px;
+            color: #555;
+        }
+        .question {
+            margin-bottom: 25px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        .question p {
+            font-weight: bold;
+            margin: 0 0 10px 0;
+        }
+        .question img {
+            max-width: 100%;
+            display: block;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+        .options label {
+            display: block;
+            margin-bottom: 8px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 3px;
+            transition: background-color 0.3s;
+        }
+        .options label:hover {
+            background-color: #e9e9e9;
+        }
+        .correct {
+            color: green;
+            font-weight: bold;
+        }
+        .incorrect {
+            color: red;
+            font-weight: bold;
+        }
+        .result-box {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #e8f5e9;
+            border: 2px solid #4CAF50;
+        }
+        #result {
+            font-size: 2em;
+            color: #388e3c;
+            margin: 10px 0;
+        }
+        .button-group {
+            text-align: center;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .gemini-btn {
+            background-color: #7986cb;
+        }
+        .gemini-btn:hover {
+            background-color: #5c6bc0;
+        }
+        .gemini-explanation {
+            background-color: #f0f4f7;
+            border-left: 3px solid #7986cb;
+            padding: 10px;
+            margin-top: 10px;
+            font-style: italic;
+        }
+        .fill-in-the-blank {
+            width: 150px;
+            border: 1px solid #ccc;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        #feedback {
+            margin-top: 15px;
+            text-align: left;
+        }
+        #feedback p {
+            margin-bottom: 5px;
+        }
+        .loading-text {
+            text-align: center;
+            font-size: 1.2em;
+            color: #888;
+        }
+        .download-btn {
+            background-color: #36a2eb;
+            margin-left: 10px;
+        }
+        .download-btn:hover {
+            background-color: #2e88c5;
+        }
+        .selection-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        .selection-container select {
+            padding: 8px;
+            font-size: 1em;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+
+ <body>
+
+    <div class="container">
+        <div class="header">
+            <h1>崇華十四期課堂測驗</h1>
+        </div>
+
+        <div id="statusModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <h3 id="modalTitle">訊息</h3>
+                <p id="modalMessage"></p>
+                <button onclick="document.getElementById('statusModal').style.display='none'">確定</button>
+            </div>
+        </div>
+
+        <div id="selection-container" class="selection-container">
+            <h2>請先選擇你的考卷、組別與姓名</h2>
+            <p id="loading-status" style="color:#1f78c9;">正在透過 Apps Script 載入名單資料...</p>
+            <select id="quiz-type-select">
+                <option value="" disabled selected>請選擇經典科目</option>
+                <option value="論語">論語</option>
+                <option value="性理">性理</option>
+                <option value="道德經">道德經</option>
+                <option value="六祖">六祖</option>
+            </select>
+            <select id="group-select" disabled>
+                <option value="" disabled selected>請選擇組別</option>
+            </select>
+            <select id="name-select" disabled>
+                <option value="" disabled selected>請選擇姓名</option>
+            </select>
+            <button id="start-btn" onclick="startQuiz()" disabled>開始測驗</button>
+        </div>
+        
+        <div id="quiz-container" style="display:none;">
+            </div>
+
+        <div class="button-group" style="display:none;">
+            <button id="submit-btn" onclick="calculateScore()">送出答案</button>
+        </div>
+
+        <div class="result-box" style="display:none;">
+            <h2>測驗結果</h2>
+            <p>考卷類型：<span id="quiz-type-result"></span></p>
+            <p>組別：<span id="group-result"></span></p>
+            <p>姓名：<span id="name-result"></span></p>
+            <p>你的得分：<span id="score"></span></p>
+            <p id="wrong-questions" style="color: red; font-weight: bold;"></p>
+            <div id="feedback"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- 全域變數和狀態設定 ---
+        const quizContainer = document.getElementById('quiz-container');
+        const selectionContainer = document.getElementById('selection-container');
+        const buttonGroup = document.querySelector('.button-group');
+        const quizTypeSelect = document.getElementById('quiz-type-select');
+        const groupSelect = document.getElementById('group-select');
+        const nameSelect = document.getElementById('name-select');
+        const startBtn = document.getElementById('start-btn');
+        const loadingStatus = document.getElementById('loading-status');
+
+        let quizData = [];         // 儲存從 Apps Script 載入的題目資料
+        let userAnswers = [];      // 儲存使用者的作答紀錄 (簡化結構，用於後端展開)
+        let selectedQuizType = ''; // 儲存使用者選擇的考卷科目
+        let selectedGroup = '';    // 儲存使用者選擇的組別
+        let selectedName = '';     // 儲存使用者選擇的姓名
+        let teamsData = {};        // 儲存從 Apps Script 載入的組別/姓名名單
+
+        // --- 輔助函式 ---
+
+        /**
+         * 顯示自訂 Modal 視窗
+         */
+        function showModal(title, message) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMessage').innerHTML = message;
+            document.getElementById('statusModal').style.display = 'flex';
+        }
+
+        /**
+         * Apps Script 呼叫失敗時的統一處理函式
+         */
+        function handleFailure(error) {
+            loadingStatus.innerHTML = `<span style="color:red;">資料載入失敗！</span><br>請確認 **Code.gs** 中的常數設定是否正確。<br>錯誤: ${error.message}`;
+            showModal('Apps Script 錯誤', error.message);
+            console.error('Apps Script 呼叫失敗:', error);
+        }
+
+        /**
+         * 隨機打亂陣列順序的函式
+         */
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+        
+        /**
+         * 將中文數字 '一' 到 '十' 轉換為對應的數值 (用於組別排序)
+         */
+        function chineseNumeralToNumber(numeral) {
+            const units = { '零': 0, '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '十': 10 };
+            let total = 0;
+            let currentNum = 0;
+
+            for (let i = 0; i < numeral.length; i++) {
+                const char = numeral[i];
+                if (char in units) {
+                    currentNum = units[char];
+                    if (currentNum > 0 && total === 0) {
+                        total += currentNum;
+                    }
+                } else if (char === '十') {
+                    if (total === 0) {
+                        total = 10;
+                    } else if (currentNum !== 0) { 
+                        total = (total - currentNum) + (currentNum * 10);
+                    } else { 
+                        total *= 10;
+                    }
+                    currentNum = 0;
+                }
+            }
+            return total;
+        }
+
+        /**
+         * 根據組別名稱，返回一個用於排序的數字權重。
+         */
+        function getGroupNumericalOrder(groupName) {
+            if (groupName.includes('主領班')) {
+                return 1000; 
+            }
+            const match = groupName.match(/(?:第)?(一|二|三|四|五|六|七|八|九|十)組/);
+
+            if (match) {
+                const chineseNum = match[1];
+                const numberOrder = chineseNumeralToNumber(chineseNum);
+                
+                if (numberOrder >= 1 && numberOrder <= 10) {
+                    return numberOrder;
+                }
+            }
+            return 100; 
+        }
+
+        // --- 核心 Apps Script 互動與名單處理 ---
+
+        /**
+         * 啟動函式：向 Apps Script 請求組別與姓名名單資料
+         */
+        function fetchTeamsData() {
+            loadingStatus.innerText = '正在透過 Apps Script 載入名單資料...';
+            google.script.run
+                .withSuccessHandler(handleTeamsDataSuccess)
+                .withFailureHandler(handleFailure)
+                .getTeamsData();
+        }
+
+        /**
+         * 處理名單資料成功回傳
+         */
+        function handleTeamsDataSuccess(data) {
+            teamsData = data;
+            
+            if (Object.keys(teamsData).length === 0) {
+                const message = 'Apps Script 成功執行，但名單中找不到任何有效的組別或姓名資料，請確認資料在 **Code.gs** 設定的**名單**工作表 A、B 兩欄。';
+                loadingStatus.innerHTML = `<span style="color:orange;">${message}</span>`;
+                showModal('名單警告', message);
+                return;
+            }
+
+            loadingStatus.innerText = '名單載入完成，請選擇科目。';
+            loadingStatus.style.color = '#4CAF50';
+            setupEventListeners(); 
+            populateGroupOptions(); 
+        }
+
+        /**
+         * 設置下拉選單的事件監聽器
+         */
+        function setupEventListeners() {
+            quizTypeSelect.addEventListener('change', (e) => {
+                selectedQuizType = e.target.value;
+                selectedGroup = '';
+                selectedName = '';
+                groupSelect.selectedIndex = 0; 
+                nameSelect.innerHTML = '<option value="" disabled selected>請選擇姓名</option>';
+                nameSelect.disabled = true;
+                groupSelect.disabled = false; 
+                checkStartButton();
+            });
+
+            groupSelect.addEventListener('change', (e) => {
+                selectedGroup = e.target.value;
+                populateNameOptions(selectedGroup);
+                checkStartButton();
+            });
+            
+            nameSelect.addEventListener('change', (e) => {
+                selectedName = e.target.value;
+                checkStartButton();
+            });
+        }
+
+        /**
+         * 填充組別選項
+         */
+        function populateGroupOptions() {
+            groupSelect.innerHTML = '<option value="" disabled selected>請選擇組別</option>';
+            let groups = Object.keys(teamsData);
+
+            groups.sort((a, b) => {
+                const numA = getGroupNumericalOrder(a);
+                const numB = getGroupNumericalOrder(b);
+
+                if (numA !== numB) {
+                    return numA - numB;
+                }
+                return a.localeCompare(b, 'zh-TW', { sensitivity: 'base' });
+            });
+
+            groups.forEach(group => {
+                const option = document.createElement('option');
+                option.value = group;
+                option.text = group;
+                groupSelect.appendChild(option);
+            });
+        }
+
+        /**
+         * 根據選擇的組別，填充對應的姓名選項
+         */
+        function populateNameOptions(group) {
+            nameSelect.innerHTML = '<option value="" disabled selected>請選擇姓名</option>';
+            if (teamsData[group]) {
+                teamsData[group].forEach(name => {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.text = name;
+                    nameSelect.appendChild(option);
+                });
+                nameSelect.disabled = false;
+            } else {
+                nameSelect.disabled = true;
+            }
+        }
+
+        /**
+         * 檢查所有選擇器是否都已選定，並啟用/禁用開始測驗按鈕
+         */
+        function checkStartButton() {
+            if (selectedQuizType && selectedGroup && selectedName) {
+                startBtn.disabled = false;
+                loadingStatus.innerText = '所有資訊皆已選定，可以開始測驗。';
+            } else {
+                startBtn.disabled = true;
+            }
+        }
+
+        // --- 測驗流程函式 ---
+
+        /**
+         * 開始測驗流程：載入「隨堂」和「科目」兩份考卷
+         */
+        function startQuiz() {
+            selectionContainer.style.display = 'none';
+            quizContainer.style.display = 'block';
+            
+            quizContainer.innerHTML = '<div class="loading-text" id="quiz-loading-message">正在透過 Apps Script 載入**必做隨堂題目**... (步驟 1/2)</div>';
+            
+            const quizTypeResult = document.getElementById('quiz-type-result');
+            if (quizTypeResult) {
+                quizTypeResult.innerText = `隨堂 + ${selectedQuizType}`;
+            }
+
+            google.script.run
+                .withSuccessHandler(handleMandatoryQuizSuccess)
+                .withFailureHandler(handleFailure)
+                .getQuizData('隨堂'); 
+        }
+        
+        /**
+         * 處理隨堂考卷 (Mandatory) 成功回傳
+         */
+        function handleMandatoryQuizSuccess(mandatoryData) {
+            quizData = mandatoryData; 
+            
+            const loadingMsg = document.getElementById('quiz-loading-message');
+            if (loadingMsg) {
+                 loadingMsg.innerHTML = `✅ 隨堂題目載入完成。正在載入**${selectedQuizType}**的題目... (步驟 2/2)`;
+            }
+
+            google.script.run
+                .withSuccessHandler(handleOptionalQuizSuccess)
+                .withFailureHandler(handleFailure)
+                .getQuizData(selectedQuizType);
+        }
+
+        /**
+         * 處理選擇科目考卷 (Optional) 成功回傳
+         */
+        function handleOptionalQuizSuccess(optionalData) {
+            quizData = [...quizData, ...optionalData]; 
+
+            if (quizData.length > 0) {
+                renderQuiz(); 
+            } else {
+                quizContainer.innerHTML = '<div class="loading-text" style="color:red;">無法載入題目，請檢查 Code.gs 中的 QUIZ_SHEETS_NAMES 設定是否正確，以及題庫工作表是否存在。</div>';
+            }
+        }
+
+        /**
+         * 根據 quizData 渲染題目到網頁上
+         */
+        function renderQuiz() {
+            quizContainer.innerHTML = '';
+            let quizHTML = '';
+
+            quizData.forEach((item, index) => {
+                const questionNumber = index + 1;
+                let optionsHTML = '';
+                const inputType = item.type === 'single' ? 'radio' : 'checkbox';
+                
+                // 處理題目提示 (加分題)
+                const bonusLabel = item.isBonus ? '<span style="color: orange; font-weight: normal; margin-left: 10px;"></span>' : '';
+                
+                // 處理圖片顯示
+                let imageHTML = '';
+                if (item.imageUrl) {
+                    const isDirectLink = /\.(jpg|jpeg|png|gif|svg|webp|bmp|tiff)$/i.test(item.imageUrl);
+                    
+                    if (isDirectLink) {
+                        imageHTML = `<img src="${item.imageUrl}" alt="題目圖片" onerror="this.onerror=null; this.src='https://placehold.co/400x150/ffcccc/c00000?text=圖片載入失敗！'; this.style.border='2px dashed #c00000';">`;
+                    } else {
+                        imageHTML = `
+                            <div style="background-color: #fcebeb; border: 1px solid #f2c7c7; padding: 10px; border-radius: 5px; text-align: center;">
+                                <p style="color: #c72c2c; font-weight: bold;">圖片無法顯示</p>
+                                <p style="font-size: 0.9em; margin: 5px 0;">您貼上的網址不是圖片檔案本身。請使用一個圖片直連網址。</p>
+                            </div>
+                        `;
+                    }
+                }
+
+                if (item.type === 'single' || item.type === 'multiple') {
+                    const shuffledOptions = shuffleArray([...item.options]); 
+                    
+                    shuffledOptions.forEach((option) => {
+                        optionsHTML += `<label><input type="${inputType}" name="q${questionNumber}" value="${option}"> ${option}</label>`;
+                    });
+                    
+                    quizHTML += `
+                        <div class="question" id="q${questionNumber}">
+                            <p>${questionNumber}. ${item.question} <span style="font-size: 0.8em; color: #888;">(${item.score.toFixed(1)}分)</span>${bonusLabel}</p>
+                            ${imageHTML}
+                            <div class="options">
+                                ${optionsHTML}
+                            </div>
+                            <div class="answer-feedback"></div>
+                        </div>
+                    `;
+                } else if (item.type === 'fill') {
+                    quizHTML += `
+                        <div class="question" id="q${questionNumber}">
+                            <p>${questionNumber}. ${item.question} <span style="font-size: 0.8em; color: #888;">(${item.score.toFixed(1)}分)</span>${bonusLabel}</p>
+                            ${imageHTML}
+                            <input type="text" class="fill-in-the-blank" id="q${questionNumber}_answer">
+                            <div class="answer-feedback"></div>
+                        </div>
+                    `;
+                }
+            });
+
+            quizContainer.innerHTML = quizHTML;
+            buttonGroup.style.display = 'block'; 
+        }
+
+        /**
+         * 計算分數，顯示結果，並準備提交資料 (已包含「加分題有寫就有分」的特殊規則，結果只顯示總分)
+         */
+        function calculateScore() {
+            let regularScore = 0;   
+            let bonusScore = 0;     
+            let totalScore = 0;     
+            
+            userAnswers = []; // 簡化數據，用於後端展開
+            const wrongQuestions = [];
+            
+            quizData.forEach((item, index) => {
+                const qId = `q${index + 1}`;
+                const questionElement = document.getElementById(qId);
+                
+                if (!questionElement) return;
+
+                const feedbackElement = questionElement.querySelector('.answer-feedback');
+                const isBonus = item.isBonus === true; 
+                let isCorrect = false;      
+                let hasAnswered = false;    
+                let userAnswerText = '';
+                let isScored = '否';
+
+                // --- 判斷作答是否正確及是否有作答 ---
+                if (item.type === 'single') {
+                    const userAnswer = document.querySelector(`input[name="${qId}"]:checked`);
+                    userAnswerText = userAnswer ? userAnswer.value : '未作答';
+                    hasAnswered = !!userAnswer; 
+                    if (userAnswer && userAnswer.value === item.answer[0]) {
+                        isCorrect = true;
+                    }
+                } else if (item.type === 'multiple') {
+                    const userAnswersArr = Array.from(document.querySelectorAll(`input[name="${qId}"]:checked`)).map(el => el.value).sort();
+                    const correctAnswersSorted = item.answer.sort();
+                    userAnswerText = userAnswersArr.join(', ') || '未作答';
+                    hasAnswered = userAnswersArr.length > 0; 
+                    if (JSON.stringify(userAnswersArr) === JSON.stringify(correctAnswersSorted)) {
+                        isCorrect = true;
+                    }
+                } else if (item.type === 'fill') {
+                    const userAnswerInput = document.getElementById(`${qId}_answer`);
+                    userAnswerText = userAnswerInput ? userAnswerInput.value.trim() : '未作答';
+                    hasAnswered = userAnswerText.length > 0; 
+                    if (item.answer.map(a => a.toLowerCase()).includes(userAnswerText.toLowerCase())) {
+                        isCorrect = true;
+                    }
+                }
+
+                // --- 根據作答結果更新分數和回饋訊息 ---
+                let scoreText = '';
+                
+                if (isBonus) {
+                    // ** 加分題的特殊邏輯：只要有寫，就給分 **
+                    if (hasAnswered) {
+                        bonusScore += item.score; 
+                        scoreText = `<span class="correct">✔ 答題成功</span><br><span style="color: #ff9800;">獲得${item.score.toFixed(1)} </span>`;
+                        isScored = '是';
+                    } else {
+                        scoreText = `<span class="incorrect">✘ 未作答</span>`;
+                        wrongQuestions.push(index + 1);
+                        isScored = '否';
+                    }
+                    
+                    const correctAnswerText = item.answer.join(', ');
+                    feedbackElement.innerHTML = `${scoreText}
+                    
+                } else {
+                    // ** 標準題的正常邏輯：答對才給分 **
+                    if (isCorrect) {
+                        regularScore += item.score; 
+                        feedbackElement.innerHTML = `<span class="correct">✔ 正確</span><br><span style="color: #ff9800;">獲得 ${item.score.toFixed(1)} 分`;
+                        isScored = '是';
+                    } else {
+                        wrongQuestions.push(index + 1);
+                        const correctAnswerText = item.answer.join(', ');
+                        feedbackElement.innerHTML = `<span class="incorrect">✘ 錯誤</span>。正確答案是：${correctAnswerText}`;
+                        isScored = '否';
+                    }
+                }
+
+                // 記錄每題的簡化數據，用於後端展開
+                userAnswers.push({
+                    qNum: index + 1,
+                    isScored: isScored, // 是否得分
+                    user: userAnswerText,
+                    correct: item.answer.join(', '),
+                });
+            });
+
+            totalScore = regularScore + bonusScore; 
+
+            // 禁用所有輸入元素，防止再次修改答案
+            const allInputs = document.querySelectorAll('#quiz-container input');
+            allInputs.forEach(input => {
+                input.disabled = true;
+            });
+
+            // 顯示最終結果區
+            document.getElementById('group-result').innerText = selectedGroup;
+            document.getElementById('name-result').innerText = selectedName;
+            
+            // 這裡已修改：只顯示總分
+            document.getElementById('score').innerHTML = 
+                `${totalScore.toFixed(1)} 分`;
+            
+            const wrongQuestionsElement = document.getElementById('wrong-questions');
+            if (wrongQuestions.length === 0) {
+                 wrongQuestionsElement.innerText = '恭喜你！所有題目都獲得分數！';
+            } else if (wrongQuestions.length > 0) {
+                // 這裡只顯示未得分的題目編號 (標準題答錯 + 加分題未作答)
+                wrongQuestionsElement.innerText = `你沒有得分的題目是第 ${wrongQuestions.join('、')} 題`;
+            }
+            
+            document.querySelector('.result-box').style.display = 'block';
+            document.querySelector('.result-box').scrollIntoView({ behavior: 'smooth' });
+
+            // 提交答案到 Apps Script
+            sendAnswersToGoogleSheet(totalScore, regularScore, bonusScore); 
+        }
+
+        /**
+         * 將成績和作答詳情傳送給 Apps Script 儲存
+         */
+        function sendAnswersToGoogleSheet(finalScore, regularScore, bonusScore) {
+            const submitButton = document.getElementById('submit-btn');
+            submitButton.disabled = true;
+            submitButton.innerText = '正在傳送...';
+            
+            const quizTypeDisplay = document.getElementById('quiz-type-result').innerText;
+
+            const dataToSend = {
+                group: selectedGroup,
+                name: selectedName,
+                score: finalScore.toFixed(1),      
+                regularScore: regularScore.toFixed(1), 
+                bonusScore: bonusScore.toFixed(1),   
+                quizType: quizTypeDisplay,
+                answers: userAnswers // 簡化後的答案陣列
+            };
+
+            google.script.run
+                .withSuccessHandler(handleSubmissionSuccess)
+                .withFailureHandler(handleSubmissionFailure)
+                .saveScore(dataToSend);
+        }
+
+        /**
+         * 處理成績提交成功
+         */
+        function handleSubmissionSuccess(result) {
+            document.getElementById('submit-btn').innerText = '成績已送出';
+            showModal('提交成功', result);
+        }
+
+        /**
+         * 處理成績提交失敗
+         */
+        function handleSubmissionFailure(error) {
+            const submitButton = document.getElementById('submit-btn');
+            submitButton.disabled = false;
+            submitButton.innerText = '送出答案 (失敗，請重試)';
+            showModal('提交失敗', `成績無法記錄到試算表。錯誤訊息：${error.message}`);
+            console.error('成績提交失敗:', error);
+        }
+
+
+        // --- 網頁載入完成，啟動資料抓取 ---
+        window.onload = fetchTeamsData;
+    </script>
+
+</body>
+</html>
+
+
+
+
