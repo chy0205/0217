@@ -11,7 +11,7 @@
         body { font-family: 'Inter', sans-serif; background-color: #f7f9fb; }
         /* 隱藏 Chrome/Safari 的數字輸入箭頭 */
         input[type='number']::-webkit-inner-spin-button,
-        input[type='number']::-webkit-outer-spin-button {
+        input[type='number']::-webkit-outer-spin-spin {
             -webkit-appearance: none;
             margin: 0;
         }
@@ -46,9 +46,9 @@
         let submitButton;
         let submissionMessageDiv;
         let form;
-        let paymentMethodSelect; // 新增：付款方式選擇器
-        let lastFourDigitsContainer; // 新增：末四碼輸入框的容器
-        let lastFourDigitsInput; // 新增：末四碼輸入框本身
+        let paymentMethodSelect; // 付款方式選擇器
+        let lastFourDigitsContainer; // 末四碼輸入框的容器
+        let lastFourDigitsInput; // 末四碼輸入框本身
 
         /**
          * 初始化所有 DOM 元素和事件監聽器。
@@ -67,7 +67,7 @@
             lastFourDigitsContainer = document.getElementById('lastFourDigitsContainer');
             lastFourDigitsInput = document.getElementById('lastFourDigits');
             
-            // 【修正】新增表單提交事件監聽器
+            // 新增表單提交事件監聽器
             form.addEventListener('submit', handleFormSubmit); 
 
             // 初始載入時執行一次計算和顯示控制
@@ -111,6 +111,7 @@
                 document.getElementById('hiddenTotalTicketsReceived').value = 0;
                 document.getElementById('hiddenTotalAmount').value = 0;
                 submitButton.disabled = true;
+                submitButton.textContent = '請輸入購買張數後送出訂單';
                 return;
             }
 
@@ -147,6 +148,9 @@
 
             // 檢查購買數量是否合理
             submitButton.disabled = purchasedTickets <= 0;
+            if (purchasedTickets > 0) {
+                 submitButton.textContent = '送出訂單';
+            }
         }
 
         /**
@@ -269,25 +273,56 @@
     <div class="w-full max-w-2xl bg-white shadow-2xl rounded-2xl p-6 md:p-10 border border-gray-100">
         
         <header class="text-center mb-8">
-            <h1 class="text-3xl font-extrabold text-indigo-700">2026好運FUN馬來</h1>
+            <h1 class="text-3xl font-extrabold text-indigo-700">2026領頭馬計劃好運FUN馬來</p>體驗卷購票</h1>
             <p class="mt-2 text-gray-500"> </p>
             
-            <!-- 票價優惠方案區塊 (已更新為列表格式) -->
-            <div class="mt-4 p-4 bg-indigo-50 rounded-lg shadow-inner">
-                <h2 class="text-lg font-bold text-indigo-700 mb-2">票價優惠方案</h2>
-                <ul class="space-y-1 text-gray-700 list-disc list-inside ml-4">
-                    <li class="text-sm">單張購買：<span class="font-bold text-blue-600">NT$ 399 / 張</span></li>
-                    <li class="text-sm">三張套票：<span class="font-bold text-blue-600">NT$ 1068 / 3 張</span> (平均 $356)</li>
-                    <li class="text-sm">
-                        <span class="font-extrabold text-green-700">買五送一</span>：
-                        <span class="font-bold text-blue-600">NT$ 1688 / 5 張</span> 
-                        <span class="text-gray-500">(實得 6 張，平均約 $281)</span>
-                    </li>
-                </ul>
-                <p class="mt-3 text-sm font-bold text-red-600 border-t border-indigo-200 pt-2">
-                    待補
-                </p>
+            <!-- 【新增圖片區塊】 -->
+            <div class="my-6">
+                <!-- 圖片網址已替換為使用者提供的連結 -->
+                <img src="https://chy0205.github.io/0217/0217.png" 
+                     onerror="this.onerror=null;this.src='https://placehold.co/600x200/5C6BC0/ffffff?text=圖片載入失敗';"
+                     alt="2026好運FUN馬來活動宣傳圖" 
+                     class="w-full max-h-96 object-contain rounded-lg shadow-xl mx-auto border border-gray-100">
             </div>
+            <!-- 【結束新增圖片區塊】 -->
+            
+            <!-- 票價優惠方案區塊 (已更新為列表格式) -->
+            <div class="mt-4 p-4 bg-indigo-50 rounded-lg shadow-inner text-left">
+
+    <!-- 置中：票價優惠方案 -->
+    <h2 class="text-lg font-bold text-indigo-700 mb-2 text-center">
+        票價優惠方案
+    </h2>
+
+    <ul class="space-y-1 text-gray-700 list-disc list-inside ml-4">
+        <li class="text-sm">單張購買：<span class="font-bold text-blue-600">NT$ 399 / 張</span></li>
+        <li class="text-sm">三張套票：<span class="font-bold text-blue-600">NT$ 1068 / 3 張</li>
+        <li class="text-sm">
+            <span class="font-extrabold text-green-700">買五送一：</span>
+            <span class="font-bold text-blue-700">NT$ 1688 / 5 張</span>
+            <span class="text-gray-500"></span>
+        </li>
+    </ul>
+
+    <!-- 新增銀行轉帳資訊 -->
+    <p class="mt-3 text-sm text-gray-800 font-medium text-center">
+        <span class="font-bold text-indigo-700">銀行轉帳：</span>陳驊廷(812)00310102746800<br>
+        <span class="text-xs text-gray-500">（匯款時備註請寫購買人以利查帳）</span>
+    </p>
+    <!-- 結束新增銀行轉帳資訊 -->
+
+    <!-- 置中：發放體驗券 -->
+    <p class="mt-3 text-sm font-bold text-red-600 border-t border-indigo-200 pt-2 text-center">
+        發放體驗券 & 收現金負責人
+    </p>
+
+    <p class="text-sm">光明：盧思妤 0919-359-679　　天慧：楊秋玲 0919-359-679</p>
+    <p class="text-sm">華德：張惠君 0923-394-167　　光輝：許雯晴 0979-710-125</p>
+    <p class="text-sm">光雄：陳哲宏 0910-516-213　　光耀：翁政局 0960-301-231</p>
+    <p class="text-sm">崇正：張瑄芸 0983-836-607</p>
+
+</div>
+
             <!-- 結束 票價優惠方案區塊 -->
             
         </header>
@@ -393,7 +428,7 @@
                         <option value="">請選擇付款方式</option>
                         <!-- 根據使用者要求更新選項 -->
                         <option value="現金支付">現金支付</option>
-                        <option value="銀行轉帳">銀行轉帳</option>
+                        <option value="銀行轉帳">銀行轉帳(匯款時備註請寫購買人以利查帳)</option>
                     </select>
                 </div>
                 
