@@ -9,7 +9,7 @@
     <style>
         /* 使用 Inter 字體 */
         body { font-family: 'Inter', sans-serif; background-color: #f7f9fb; }
-        /* 隱藏 Chrome/Safari 的數字輸入箭頭 */
+        /* 隱藏 Chrome/Safari 的數字輸入箭頭，使介面更簡潔 */
         input[type='number']::-webkit-inner-spin-button,
         input[type='number']::-webkit-outer-spin-spin {
             -webkit-appearance: none;
@@ -19,7 +19,7 @@
         input[type='number'] {
             -moz-appearance: textfield;
         }
-        /* 必填欄位標籤樣式 */
+        /* 必填欄位標籤樣式：使用 ::after 偽元素自動加上紅色的星號 */
         .required-label::after {
             content: '*';
             margin-left: 4px;
@@ -28,17 +28,18 @@
     </style>
     <script>
         // =======================================================
-        // 【重要】已更新為您提供的 Google Apps Script 部署 URL
+        // 【重要常數區塊】
         // =======================================================
+        // Google Apps Script 部署 URL：表單數據會 POST 到此服務端點
         const FORM_URL = "https://script.google.com/macros/s/AKfycbxhOHNd4LeAWAPkQcPUkeIAJJ2b5ng9D-7YuhaXWxXNDpLH7rPfre9zQE3HuvlYskwr/exec"; 
         
-        // 票價固定價格點 (Price Blocks)
+        // 票價固定價格點 (Price Blocks)：用於計算總金額
         const PRICE_1_TICKET = 399;     // 1 張價格
         const PRICE_3_TICKETS = 1068;   // 3 張價格
         const PRICE_5_TICKETS = 1688;   // 5 張價格 (送 1 張)
-        const BLOCK_SIZE = 5;
+        const BLOCK_SIZE = 5;           // 買五送一的區塊大小
 
-        // DOM 元素引用
+        // DOM 元素引用 (在 window.onload 時初始化)
         let purchasedTicketsInput;
         let totalAmountDisplay;
         let freeTicketsDisplay;
@@ -46,14 +47,15 @@
         let submitButton;
         let submissionMessageDiv;
         let form;
-        let paymentMethodSelect; // 付款方式選擇器
-        let lastFourDigitsContainer; // 末四碼輸入框的容器
-        let lastFourDigitsInput; // 末四碼輸入框本身
+        let paymentMethodSelect;
+        let lastFourDigitsContainer;
+        let lastFourDigitsInput;
 
         /**
-         * 初始化所有 DOM 元素和事件監聽器。
+         * 初始化所有 DOM 元素和事件監聽器。在頁面載入完成後執行。
          */
         window.onload = function() {
+            // 獲取所有需要的 DOM 元素引用
             purchasedTicketsInput = document.getElementById('purchasedTickets');
             totalAmountDisplay = document.getElementById('totalAmount');
             freeTicketsDisplay = document.getElementById('freeTickets');
@@ -61,18 +63,16 @@
             submitButton = document.getElementById('submitButton');
             submissionMessageDiv = document.getElementById('submissionMessage');
             form = document.getElementById('orderForm');
-
-            // 新增 DOM 引用
             paymentMethodSelect = document.getElementById('paymentMethod');
             lastFourDigitsContainer = document.getElementById('lastFourDigitsContainer');
             lastFourDigitsInput = document.getElementById('lastFourDigits');
             
-            // 新增表單提交事件監聽器
+            // 設定表單提交事件：阻止預設行為，改由 handleFormSubmit 進行非同步提交
             form.addEventListener('submit', handleFormSubmit); 
 
-            // 初始載入時執行一次計算和顯示控制
+            // 初始載入時執行一次計算和顯示控制，確保預設值正確
             updateCalculation();
-            toggleLastFourDigits(); // 確保初始狀態 (末四碼欄位) 是隱藏的
+            toggleLastFourDigits(); // 初始狀態下隱藏末四碼欄位
         };
 
         /**
@@ -96,14 +96,17 @@
         }
 
         /**
-         * 根據購買張數更新總金額和票券數量。
-         * 採用嚴格的「固定套餐組合」定價邏輯: 優先使用 5 張、再使用 3 張、最後使用 1 張的價格。
+         * 核心計算邏輯：根據購買張數更新總金額和票券數量。
+         * 採用嚴格的「固定套餐組合」定價邏輯，優先使用大額優惠組合：
+         * 1. 優先計算 5 張套票 (買五送一)
+         * 2. 再計算剩餘的 3 張套票
+         * 3. 最後計算剩餘的 1 張單票
          */
         function updateCalculation() {
-            // 獲取值，如果不是有效數字或空值，則視為 0
             let purchasedTickets = parseInt(purchasedTicketsInput.value) || 0;
             
             if (purchasedTickets <= 0) {
+                // 如果購買數量無效，重置所有顯示和隱藏欄位
                 totalAmountDisplay.textContent = '0';
                 freeTicketsDisplay.textContent = '0';
                 totalTicketsReceivedDisplay.textContent = '0';
@@ -136,17 +139,14 @@
             // 4. 最終計算
             const totalTicketsReceived = purchasedTickets + freeTickets;
 
-            // 5. 更新前端顯示
+            // 5. 更新前端顯示和隱藏欄位
             totalAmountDisplay.textContent = totalAmount.toLocaleString('zh-TW'); // 格式化金額
             freeTicketsDisplay.textContent = freeTickets;
             totalTicketsReceivedDisplay.textContent = totalTicketsReceived;
-
-            // 將計算結果儲存為隱藏欄位，以便於提交
             document.getElementById('hiddenFreeTickets').value = freeTickets;
             document.getElementById('hiddenTotalTicketsReceived').value = totalTicketsReceived;
             document.getElementById('hiddenTotalAmount').value = totalAmount;
 
-            // 檢查購買數量是否合理
             submitButton.disabled = purchasedTickets <= 0;
             if (purchasedTickets > 0) {
                  submitButton.textContent = '送出訂單';
@@ -155,6 +155,7 @@
 
         /**
          * 根據付款方式顯示或隱藏「付款末四碼」欄位。
+         * 只有選擇「銀行轉帳」時才需要顯示。
          */
         function toggleLastFourDigits() {
             const selectedMethod = paymentMethodSelect.value;
@@ -162,11 +163,11 @@
 
             if (isBankTransfer) {
                 lastFourDigitsContainer.classList.remove('hidden');
-                // 當欄位顯示時，設定為必填
+                // 設為必填，強制使用者提供末四碼
                 lastFourDigitsInput.required = true;
             } else {
                 lastFourDigitsContainer.classList.add('hidden');
-                // 當欄位隱藏時，移除必填屬性並清空值，避免提交錯誤
+                // 移除必填屬性並清空值，避免提交錯誤
                 lastFourDigitsInput.required = false;
                 lastFourDigitsInput.value = '';
             }
@@ -177,9 +178,9 @@
          * @param {Event} event 提交事件。
          */
         async function handleFormSubmit(event) {
-            event.preventDefault();
+            event.preventDefault(); // 阻止瀏覽器預設的表單提交（避免頁面跳轉）
 
-            // 獲取所有表單數據
+            // 收集所有表單和隱藏欄位的數據
             const formData = {
                 purchaserName: document.getElementById('purchaserName').value,
                 phoneNumber: document.getElementById('phoneNumber').value,
@@ -188,8 +189,7 @@
                 referrer: document.getElementById('referrer').value,
                 purchasedTickets: parseInt(document.getElementById('purchasedTickets').value) || 0,
                 paymentMethod: document.getElementById('paymentMethod').value,
-                // 即使隱藏，如果非銀行轉帳，值也會是空字串，符合需求
-                lastFourDigits: document.getElementById('lastFourDigits').value,
+                lastFourDigits: document.getElementById('lastFourDigits').value, // 銀行轉帳末四碼
                 
                 // 讀取隱藏的計算結果
                 freeTickets: parseInt(document.getElementById('hiddenFreeTickets').value) || 0,
@@ -197,23 +197,23 @@
                 totalAmount: parseInt(document.getElementById('hiddenTotalAmount').value) || 0
             };
             
-            // 基礎驗證 (可擴充更多驗證邏輯)
+            // 基礎必填欄位驗證
             if (!formData.purchaserName || !formData.phoneNumber || formData.purchasedTickets <= 0) {
                 showMessage('error', '請填寫所有必填欄位 (姓名、手機、購買張數)。');
                 return;
             }
 
-            // 設定提交狀態
+            // 更新提交狀態和顯示讀取訊息
             submitButton.disabled = true;
             submitButton.textContent = '處理中... 請稍候';
             showMessage('loading', '正在將您的訂單提交至伺服器...');
 
             // 發送 POST 請求到 Apps Script
             try {
-                // Apps Script 偏好 Content-Type: text/plain 以避免複雜的預檢 (pre-flight)
+                // Apps Script 服務端點通常要求 Content-Type: text/plain 以避免複雜的 CORS 預檢
                 const response = await fetch(FORM_URL, {
                     method: 'POST',
-                    mode: 'cors', // 允許 CORS
+                    mode: 'cors', 
                     cache: 'no-cache',
                     headers: {
                         'Content-Type': 'text/plain;charset=utf-8', 
@@ -221,23 +221,25 @@
                     body: JSON.stringify(formData) // 將數據轉為 JSON 字串傳送
                 });
                 
-                // 解析 Apps Script 回傳的 JSON 結果
                 const result = await response.json(); 
 
                 if (result.status === 200) {
+                    // 提交成功
                     showMessage('success', `🎉 訂單送出成功！<br>訊息: ${result.message}<br><span class="text-sm font-normal mt-1">（請注意：這只是系統記錄，最終訂單確認以專人通知為主）</span>`);
                     submitButton.textContent = '✅ 訂單已成功送出';
-                    form.reset(); // 清空表單
+                    form.reset(); // 清空表單所有欄位
                     purchasedTicketsInput.value = 1; // 重設為 1
                     updateCalculation(); // 重設計算顯示
                     toggleLastFourDigits(); // 重設末四碼欄位狀態
                 } else {
+                    // 提交失敗 (Apps Script 回傳錯誤狀態)
                     showMessage('error', `⚠️ 提交失敗 (${result.status})。<br>訊息: ${result.message}`);
                     submitButton.disabled = false;
                     submitButton.textContent = '請重試送出訂單';
                 }
 
             } catch (error) {
+                // 網路錯誤或 Fetch 請求失敗
                 console.error("Fetch Error:", error);
                 showMessage('error', `❌ 網路錯誤或伺服器無回應。<br>請檢查您的 Apps Script 部署狀態或網路連線。`);
                 submitButton.disabled = false;
@@ -246,136 +248,144 @@
         }
         
         /**
-         * 顯示不同狀態的訊息。
-         * @param {'loading'|'success'|'error'} type 訊息類型。
-         * @param {string} message 訊息內容 (支持 HTML)。
+         * 顯示不同狀態的訊息，並應用對應的樣式。
+         * @param {'loading'|'success'|'error'} type 訊息類型 (決定樣式)。
+         * @param {string} message 訊息內容 (支持 HTML 格式)。
          */
         function showMessage(type, message) {
             submissionMessageDiv.innerHTML = message;
             
             switch (type) {
                 case 'loading':
+                    // 藍色背景，帶有脈衝動畫
                     submissionMessageDiv.className = 'mt-6 p-4 rounded-xl bg-blue-100 text-blue-700 shadow-md animate-pulse';
                     break;
                 case 'success':
+                    // 綠色背景，成功提示
                     submissionMessageDiv.className = 'mt-6 p-4 rounded-xl bg-green-100 text-green-800 font-bold shadow-md';
                     break;
                 case 'error':
+                    // 紅色背景，錯誤提示
                     submissionMessageDiv.className = 'mt-6 p-4 rounded-xl bg-red-100 text-red-800 font-bold shadow-md';
                     break;
             }
+            // 滾動到訊息位置，確保使用者看到
             submissionMessageDiv.scrollIntoView({ behavior: 'smooth' });
         }
     </script>
 </head>
+<!-- ------------------------------------------------------------- -->
+<!-- HTML 內容區塊 (使用 Tailwind CSS 確保響應式佈局和美觀) -->
+<!-- ------------------------------------------------------------- -->
 <body class="p-4 md:p-8 min-h-screen flex items-center justify-center">
 
     <div class="w-full max-w-2xl bg-white shadow-2xl rounded-2xl p-6 md:p-10 border border-gray-100">
         
         <header class="text-center mb-8">
-            <h1 class="text-3xl font-extrabold text-indigo-700">2026領頭馬計劃</p>好運FUN馬來</p>體驗卷購票</h1>
+            <!-- 標題調整為 text-4xl (約 36px) -->
+            <h1 class="text-4xl font-extrabold text-indigo-700">2026領頭馬計劃</p>好運FUN馬來</p>體驗卷購票</h1>
             <p class="mt-2 text-gray-500"> </p>
             
-            <!-- 【新增圖片區塊】 -->
+            <!-- 【活動圖片區塊】 -->
             <div class="my-6">
-                <!-- 圖片網址已替換為使用者提供的連結 -->
                 <img src="https://chy0205.github.io/0217/0217.png" 
                      onerror="this.onerror=null;this.src='https://placehold.co/600x200/5C6BC0/ffffff?text=圖片載入失敗';"
                      alt="2026好運FUN馬來活動宣傳圖" 
                      class="w-full max-h-96 object-contain rounded-lg shadow-xl mx-auto border border-gray-100">
             </div>
-            <!-- 【結束新增圖片區塊】 -->
             
-            <!-- 票價優惠方案區塊 (已更新為列表格式) -->
+            <!-- 【票價優惠方案與負責人資訊區塊】 -->
             <div class="mt-4 p-4 bg-indigo-50 rounded-lg shadow-inner text-left">
 
-    <!-- 置中：票價優惠方案 -->
-    <h2 class="text-lg font-bold text-indigo-700 mb-2 text-center">
-        票價優惠方案
-    </h2>
+                <!-- 票價優惠方案標題：使用 text-xl (20px) 保持醒目 -->
+                <h2 class="text-xl font-bold text-indigo-700 mb-2 text-center">票價優惠方案</h2>
 
-    <ul class="space-y-1 text-gray-700 list-disc list-inside ml-4">
-        <li class="text-sm">單張購買：<span class="font-bold text-blue-600">NT$ 399 / 張</span></li>
-        <li class="text-sm">三張套票：<span class="font-bold text-blue-600">NT$ 1068 / 3 張</li>
-        <li class="text-sm">
-            <span class="font-extrabold text-green-700">五張套票（加送一張）：</span>
-            <span class="font-bold text-blue-700">NT$ 1688 / 6張</span>
-            <span class="text-gray-500"></span>
-        </li>
-    </ul>
+                <!-- 票價列表：使用 text-base (16px) 達到您要求的 16級字效果 -->
+                <ul class="space-y-1 text-lg text-gray-700 list-disc list-inside ml-4">
+                    <li>單張購買：<span class="font-bold text-blue-600">NT$ 399 / 張</span></li>
+                    <li>三張套票：<span class="font-bold text-blue-600">NT$ 1068 / 3 張</li>
+                    <li>
+                        <span class="font-extrabold text-green-700">買五送一：</span>
+                        <span class="font-bold text-blue-700">NT$ 1688 / 5 張</span>
+                        <span class="text-gray-500">(實得 6 張，平均約 $281)</span>
+                    </li>
+                </ul>
 
-    <!-- 新增銀行轉帳資訊 -->
-    <p class="mt-3 text-sm text-gray-800 font-medium text-center">
-        <span class="font-bold text-indigo-700">銀行轉帳：</span>陳驊廷(812)00310102746800<br>
-        <span class="text-xs text-gray-500">（匯款時備註請寫購買人以利查帳）</span>
-    </p>
-    <!-- 結束新增銀行轉帳資訊 -->
+                <!-- 銀行轉帳資訊 -->
+                <p class="mt-3 text-LG text-gray-800 font-medium text-center">
+                    <span class="font-bold text-indigo-700">銀行轉帳：</span>陳驊廷(812)00310102746800<br>
+                    <!-- 備註：使用 text-xs (18px) 達到您要求的 12級字效果 -->
+                    <span class="text-XS text-gray-500">（匯款時備註請寫購買人以利查帳）</span>
+                </p>
 
-    <!-- 置中：發放體驗券 -->
-    <p class="mt-3 text-sm font-bold text-red-600 border-t border-indigo-200 pt-2 text-center">
-        發放體驗券 & 收現金負責人
-    </p>
+                <!-- 發放體驗券與收現金負責人資訊 (有分隔線) -->
+                <!-- 標題與列表：使用 text-base (16px) 達到您要求的 12級字效果 -->
+                <p class="mt-3 text-lg font-bold text-red-600 border-t border-indigo-200 pt-2 text-center">
+                    發放體驗券 & 收現金負責人
+                </p>
+                <p class="text-base">光明：盧思妤 0919-359-679　　天慧：楊秋玲 0919-359-679</p>
+                <p class="text-base">華德：張惠君 0923-394-167　　光輝：許雯晴 0979-710-125</p>
+                <p class="text-base">光雄：陳哲宏 0910-516-213　　光耀：翁政局 0960-301-231</p>
+                <p class="text-base">崇正：張瑄芸 0983-836-607</p>
 
-    <p class="text-sm">光明（新北）：盧思妤 0919-359-679　　天慧（新北）：楊秋玲 0922-151-072</p>
-    <p class="text-sm">華德（彰化）：張惠君 0923-394-167　　光輝（台南）：許雯晴 0979-710-125</p>
-    <p class="text-sm">光雄（高雄）：陳哲宏 0910-516-213 　　光耀（嘉義）：翁政局 0960-301-231</p>
-    <p class="text-sm">崇正（台中）：張瑄芸 0983-836-607</p>
-
-</div>
-
-            <!-- 結束 票價優惠方案區塊 -->
+            </div>
             
         </header>
 
+        <!-- 訂單表單主體 -->
         <form id="orderForm" class="space-y-6">
             
-            <!-- 區塊 1: 基本聯絡資訊 -->
+            <!-- 區塊 1: 基本聯絡資訊 (購票人資訊) -->
             <fieldset class="border p-5 rounded-xl space-y-4 bg-gray-50/50">
-                <legend class="text-lg font-semibold text-gray-700 px-2">購票人資訊</legend>
+                <legend class="text-2xl font-semibold text-gray-700 px-2">購票人資訊</legend>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- 購票人姓名 (必填) -->
                     <div>
-                        <label for="purchaserName" class="block text-sm font-medium text-gray-700 required-label">購票人姓名</label>
+                        <label for="purchaserName" class="block text-lg font-medium text-gray-700 required-label">購票人姓名</label>
                         <input type="text" id="purchaserName" name="purchaserName" required
                                class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3">
                     </div>
+                    <!-- 手機號碼 (必填) -->
                     <div>
-                        <label for="phoneNumber" class="block text-sm font-medium text-gray-700 required-label">手機號碼</label>
+                        <label for="phoneNumber" class="block text-lg font-medium text-gray-700 required-label">手機號碼</label>
                         <input type="tel" id="phoneNumber" name="phoneNumber" required pattern="[0-9]{10}" placeholder="例如: 0912345678"
                                class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- 所在區域已改為文字輸入 -->
+                    <!-- 區域 (選填) -->
                     <div>
-                        <label for="region" class="block text-sm font-medium text-gray-700">區域</label>
+                        <label for="region" class="block text-lg font-medium text-gray-700">區域</label>
                         <input type="text" id="region" name="region" placeholder="請輸入所屬區域"
                                class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3">
                     </div>
+                    <!-- Line ID (選填) -->
                     <div>
-                        <label for="lineId" class="block text-sm font-medium text-gray-700">Line ID (選填)</label>
+                        <label for="lineId" class="block text-lg font-medium text-gray-700">Line ID (選填)</label>
                         <input type="text" id="lineId" name="lineId"
                                class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3">
                     </div>
                 </div>
 
+                <!-- 推薦人姓名 (選填) -->
                 <div>
-                    <label for="referrer" class="block text-sm font-medium text-gray-700">推薦人姓名 (選填)</label>
+                    <label for="referrer" class="block text-lg font-medium text-gray-700">推薦人姓名 (選填)</label>
                     <input type="text" id="referrer" name="referrer"
                            class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3">
                 </div>
             </fieldset>
 
-            <!-- 區塊 2: 票券數量與計算 -->
+            <!-- 區塊 2: 票券數量與計算 (核心邏輯顯示區) -->
             <fieldset class="border p-5 rounded-xl space-y-4 bg-indigo-50/50">
-                <legend class="text-lg font-semibold text-gray-700 px-2">票券數量計算</legend>
+                <legend class="text-2xl font-semibold text-gray-700 px-2">票券數量計算</legend>
 
                 <div>
-                    <label for="purchasedTickets" class="block text-sm font-bold text-indigo-700 required-label">
+                    <!-- 購買張數輸入控制項 -->
+                    <label for="purchasedTickets" class="block text-lg font-bold text-indigo-700 required-label">
                         購買張數
                     </label>
-                    <!-- 購買張數：已移除 readonly，並新增 oninput 讓使用者可手動輸入 -->
                     <div class="flex mt-1 rounded-lg overflow-hidden border border-indigo-300 shadow-md">
                         <button type="button" onclick="decrementTickets()" 
                                 class="p-3 bg-indigo-200 text-indigo-700 font-extrabold text-3xl hover:bg-indigo-300 transition duration-150 w-1/4 flex items-center justify-center">
@@ -383,8 +393,9 @@
                               <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
                             </svg>
                         </button>
+                        <!-- 購買張數輸入框調整為 text-4xl -->
                         <input type="number" id="purchasedTickets" name="purchasedTickets" value="1" min="1" required oninput="updateCalculation()"
-                               class="block w-2/4 bg-white border-x border-indigo-300 focus:outline-none p-3 text-3xl text-center font-extrabold appearance-none text-indigo-800">
+                               class="block w-2/4 bg-white border-x border-indigo-300 focus:outline-none p-3 text-4xl text-center font-extrabold appearance-none text-indigo-800">
                         <button type="button" onclick="incrementTickets()" 
                                 class="p-3 bg-indigo-200 text-indigo-700 font-extrabold text-3xl hover:bg-indigo-300 transition duration-150 w-1/4 flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-8 h-8">
@@ -395,23 +406,26 @@
                 </div>
 
                 <div class="space-y-2">
+                    <!-- 免費贈送張數顯示 -->
                     <div class="flex justify-between items-center p-3 bg-white rounded-lg shadow-sm">
                         <span class="text-sm font-medium text-gray-600">免費贈送張數 (每 5 張贈 1 張)</span>
                         <span id="freeTickets" class="text-xl font-bold text-green-600">0</span>
                     </div>
 
+                    <!-- 最終獲得總票數顯示 -->
                     <div class="flex justify-between items-center p-3 bg-white rounded-lg shadow-sm">
                         <span class="text-sm font-medium text-gray-600">最終獲得總票數 (付費 + 贈送)</span>
                         <span id="totalTicketsReceived" class="text-xl font-bold text-indigo-600">1</span>
                     </div>
 
+                    <!-- 應付總金額顯示 (最醒目) 調整為 text-4xl -->
                     <div class="flex justify-between items-center p-4 bg-indigo-700 text-white rounded-lg shadow-lg">
                         <span class="text-lg font-bold">應付總金額 (TWD)</span>
-                        <span class="text-3xl font-extrabold">$<span id="totalAmount">399</span></span>
+                        <span class="text-4xl font-extrabold">$<span id="totalAmount">399</span></span>
                     </div>
                 </div>
                 
-                <!-- 隱藏欄位用於提交計算結果給 Apps Script -->
+                <!-- 隱藏欄位：用於將計算結果一併提交給 Apps Script -->
                 <input type="hidden" id="hiddenFreeTickets" name="freeTickets">
                 <input type="hidden" id="hiddenTotalTicketsReceived" name="totalTicketsReceived">
                 <input type="hidden" id="hiddenTotalAmount" name="totalAmount">
@@ -419,20 +433,20 @@
 
             <!-- 區塊 3: 付款資訊 -->
             <fieldset class="border p-5 rounded-xl space-y-4 bg-gray-50/50">
-                <legend class="text-lg font-semibold text-gray-700 px-2">付款資訊</legend>
+                <legend class="text-2xl font-semibold text-gray-700 px-2">付款資訊</legend>
 
+                <!-- 付款方式選擇器，onChange 時觸發 toggleLastFourDigits() -->
                 <div>
                     <label for="paymentMethod" class="block text-sm font-medium text-gray-700 required-label">付款方式</label>
                     <select id="paymentMethod" name="paymentMethod" required onchange="toggleLastFourDigits()"
                             class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3">
                         <option value="">請選擇付款方式</option>
-                        <!-- 根據使用者要求更新選項 -->
                         <option value="現金支付">現金支付</option>
                         <option value="銀行轉帳">銀行轉帳(匯款時備註請寫購買人以利查帳)</option>
                     </select>
                 </div>
                 
-                <!-- 新增 ID 和 hidden class，並將 required 屬性移除，由 JS 控管 -->
+                <!-- 付款末四碼/交易序號：預設隱藏，只有選擇銀行轉帳時才會顯示 -->
                 <div id="lastFourDigitsContainer" class="hidden">
                     <label for="lastFourDigits" class="block text-sm font-medium text-gray-700 required-label">
                         付款末四碼 / 交易序號
@@ -442,14 +456,14 @@
                 </div>
             </fieldset>
 
-            <!-- 提交按鈕 -->
+            <!-- 提交按鈕：會根據購買張數自動啟用/禁用 -->
             <button type="submit" id="submitButton" disabled
                     class="w-full py-4 px-4 bg-indigo-600 text-white font-bold text-lg rounded-xl shadow-lg hover:bg-indigo-700 transition duration-150 disabled:bg-indigo-300">
                 請輸入購買張數後送出訂單
             </button>
         </form>
 
-        <!-- 提交結果訊息區 -->
+        <!-- 提交結果訊息區：用於顯示 loading, success, 或 error 訊息 -->
         <div id="submissionMessage" class="mt-6">
             <!-- 訊息將會顯示在這裡 -->
         </div>
@@ -460,3 +474,31 @@
 </html>
 
 
+
+<!--類別名稱 (Class)  尺寸 (rem)   像素 (px)   說明 (中文)
+
+text-xs   0.75rem  12px  超小
+
+text-sm  0.875rem  14px  略小
+
+text-base  1rem  16px  預設基礎大小 (Default)
+
+text-lg  1.125rem   18px  略大
+
+text-xl  1.25rem  20px  大
+
+text-2xl  1.5rem  24px  兩倍大
+
+text-3xl  1.875rem  30px  三倍大 (相當於您之前詢問的 30px)
+
+text-4xl  2.25rem  36px  四倍大
+
+text-5xl  3rem  48px  特大
+
+text-6xl 3.75rem  60px 巨型
+
+text-7xl  4.5rem  72px
+
+text-8xl  6rem  96px
+
+text-9xl  8rem  128px最大-->
