@@ -3,720 +3,423 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>崇華十四期課堂測驗</title>
+    <title>2026好運FUN馬來</title>
+    <!-- 載入 Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body {
-            font-family: '標楷體', 'BiauKai', serif;
-            line-height: 1.6;
+        /* 使用 Inter 字體 */
+        body { font-family: 'Inter', sans-serif; background-color: #f7f9fb; }
+        /* 隱藏 Chrome/Safari 的數字輸入箭頭 */
+        input[type='number']::-webkit-inner-spin-button,
+        input[type='number']::-webkit-outer-spin-button {
+            -webkit-appearance: none;
             margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
-            color: #333;
         }
-        .container {
-            max-width: 800px;
-            margin: auto;
-            background: #fff;
-            padding: 20px 40px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        /* 隱藏 Firefox 的數字輸入箭頭 */
+        input[type='number'] {
+            -moz-appearance: textfield;
         }
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .header h1 {
-            font-size: 2.5em;
-            color: #4CAF50;
-        }
-        .section {
-            margin-bottom: 30px;
-        }
-        .section h2 {
-            font-size: 1.8em;
-            border-bottom: 2px solid #4CAF50;
-            padding-bottom: 5px;
-            color: #555;
-        }
-        .question {
-            margin-bottom: 25px;
-            border: 1px solid #ddd;
-            padding: 15px;
-            border-radius: 5px;
-            background-color: #fafafa;
-        }
-        .question p {
-            font-weight: bold;
-            margin: 0 0 10px 0;
-        }
-        .question img {
-            max-width: 100%;
-            display: block;
-            margin-top: 10px;
-            border-radius: 4px;
-        }
-        .options label {
-            display: block;
-            margin-bottom: 8px;
-            cursor: pointer;
-            padding: 5px;
-            border-radius: 3px;
-            transition: background-color 0.3s;
-        }
-        .options label:hover {
-            background-color: #e9e9e9;
-        }
-        .correct {
-            color: green;
-            font-weight: bold;
-        }
-        .incorrect {
-            color: red;
-            font-weight: bold;
-        }
-        .result-box {
-            text-align: center;
-            margin-top: 30px;
-            padding: 20px;
-            border-radius: 8px;
-            background-color: #e8f5e9;
-            border: 2px solid #4CAF50;
-        }
-        #result {
-            font-size: 2em;
-            color: #388e3c;
-            margin: 10px 0;
-        }
-        .button-group {
-            text-align: center;
-            margin-top: 20px;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 1em;
-            border: none;
-            border-radius: 5px;
-            background-color: #4CAF50;
-            color: white;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
-        .gemini-btn {
-            background-color: #7986cb;
-        }
-        .gemini-btn:hover {
-            background-color: #5c6bc0;
-        }
-        .gemini-explanation {
-            background-color: #f0f4f7;
-            border-left: 3px solid #7986cb;
-            padding: 10px;
-            margin-top: 10px;
-            font-style: italic;
-        }
-        .fill-in-the-blank {
-            width: 150px;
-            border: 1px solid #ccc;
-            padding: 5px;
-            border-radius: 3px;
-        }
-        #feedback {
-            margin-top: 15px;
-            text-align: left;
-        }
-        #feedback p {
-            margin-bottom: 5px;
-        }
-        .loading-text {
-            text-align: center;
-            font-size: 1.2em;
-            color: #888;
-        }
-        .download-btn {
-            background-color: #36a2eb;
-            margin-left: 10px;
-        }
-        .download-btn:hover {
-            background-color: #2e88c5;
-        }
-        .selection-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-        }
-        .selection-container select {
-            padding: 8px;
-            font-size: 1em;
-            margin-bottom: 15px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
+        /* 必填欄位標籤樣式 */
+        .required-label::after {
+            content: '*';
+            margin-left: 4px;
+            color: #ef4444; /* red-500 */
         }
     </style>
-</head>
-
- <body>
-
-    <div class="container">
-        <div class="header">
-            <h1>崇華十四期課堂測驗</h1>
-        </div>
-
-        <div id="statusModal" class="modal" style="display: none;">
-            <div class="modal-content">
-                <h3 id="modalTitle">訊息</h3>
-                <p id="modalMessage"></p>
-                <button onclick="document.getElementById('statusModal').style.display='none'">確定</button>
-            </div>
-        </div>
-
-        <div id="selection-container" class="selection-container">
-            <h2>請先選擇你的考卷、組別與姓名</h2>
-            <p id="loading-status" style="color:#1f78c9;">正在透過 Apps Script 載入名單資料...</p>
-            <select id="quiz-type-select">
-                <option value="" disabled selected>請選擇經典科目</option>
-                <option value="論語">論語</option>
-                <option value="性理">性理</option>
-                <option value="道德經">道德經</option>
-                <option value="六祖">六祖</option>
-            </select>
-            <select id="group-select" disabled>
-                <option value="" disabled selected>請選擇組別</option>
-            </select>
-            <select id="name-select" disabled>
-                <option value="" disabled selected>請選擇姓名</option>
-            </select>
-            <button id="start-btn" onclick="startQuiz()" disabled>開始測驗</button>
-        </div>
-        
-        <div id="quiz-container" style="display:none;">
-            </div>
-
-        <div class="button-group" style="display:none;">
-            <button id="submit-btn" onclick="calculateScore()">送出答案</button>
-        </div>
-
-        <div class="result-box" style="display:none;">
-            <h2>測驗結果</h2>
-            <p>考卷類型：<span id="quiz-type-result"></span></p>
-            <p>組別：<span id="group-result"></span></p>
-            <p>姓名：<span id="name-result"></span></p>
-            <p>你的得分：<span id="score"></span></p>
-            <p id="wrong-questions" style="color: red; font-weight: bold;"></p>
-            <div id="feedback"></div>
-        </div>
-    </div>
-
     <script>
-        // --- 全域變數和狀態設定 ---
-        const quizContainer = document.getElementById('quiz-container');
-        const selectionContainer = document.getElementById('selection-container');
-        const buttonGroup = document.querySelector('.button-group');
-        const quizTypeSelect = document.getElementById('quiz-type-select');
-        const groupSelect = document.getElementById('group-select');
-        const nameSelect = document.getElementById('name-select');
-        const startBtn = document.getElementById('start-btn');
-        const loadingStatus = document.getElementById('loading-status');
-
-        let quizData = [];         // 儲存從 Apps Script 載入的題目資料
-        let userAnswers = [];      // 儲存使用者的作答紀錄 (簡化結構，用於後端展開)
-        let selectedQuizType = ''; // 儲存使用者選擇的考卷科目
-        let selectedGroup = '';    // 儲存使用者選擇的組別
-        let selectedName = '';     // 儲存使用者選擇的姓名
-        let teamsData = {};        // 儲存從 Apps Script 載入的組別/姓名名單
-
-        // --- 輔助函式 ---
-
-        /**
-         * 顯示自訂 Modal 視窗
-         */
-        function showModal(title, message) {
-            document.getElementById('modalTitle').innerText = title;
-            document.getElementById('modalMessage').innerHTML = message;
-            document.getElementById('statusModal').style.display = 'flex';
-        }
-
-        /**
-         * Apps Script 呼叫失敗時的統一處理函式
-         */
-        function handleFailure(error) {
-            loadingStatus.innerHTML = `<span style="color:red;">資料載入失敗！</span><br>請確認 **Code.gs** 中的常數設定是否正確。<br>錯誤: ${error.message}`;
-            showModal('Apps Script 錯誤', error.message);
-            console.error('Apps Script 呼叫失敗:', error);
-        }
-
-        /**
-         * 隨機打亂陣列順序的函式
-         */
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
+        // =======================================================
+        // 【重要】已更新為您提供的 Google Apps Script 部署 URL
+        // =======================================================
+        const FORM_URL = "https://script.google.com/macros/s/AKfycbxhOHNd4LeAWAPkQcPUkeIAJJ2b5ng9D-7YuhaXWxXNDpLH7rPfre9zQE3HuvlYskwr/exec"; 
         
-        /**
-         * 將中文數字 '一' 到 '十' 轉換為對應的數值 (用於組別排序)
-         */
-        function chineseNumeralToNumber(numeral) {
-            const units = { '零': 0, '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '十': 10 };
-            let total = 0;
-            let currentNum = 0;
+        // 票價固定價格點 (Price Blocks)
+        const PRICE_1_TICKET = 399;     // 1 張價格
+        const PRICE_3_TICKETS = 1068;   // 3 張價格
+        const PRICE_5_TICKETS = 1688;   // 5 張價格 (送 1 張)
+        const BLOCK_SIZE = 5;
 
-            for (let i = 0; i < numeral.length; i++) {
-                const char = numeral[i];
-                if (char in units) {
-                    currentNum = units[char];
-                    if (currentNum > 0 && total === 0) {
-                        total += currentNum;
-                    }
-                } else if (char === '十') {
-                    if (total === 0) {
-                        total = 10;
-                    } else if (currentNum !== 0) { 
-                        total = (total - currentNum) + (currentNum * 10);
-                    } else { 
-                        total *= 10;
-                    }
-                    currentNum = 0;
-                }
-            }
-            return total;
-        }
+        // DOM 元素引用
+        let purchasedTicketsInput;
+        let totalAmountDisplay;
+        let freeTicketsDisplay;
+        let totalTicketsReceivedDisplay;
+        let submitButton;
+        let submissionMessageDiv;
+        let form;
+        let paymentMethodSelect; // 新增：付款方式選擇器
+        let lastFourDigitsContainer; // 新增：末四碼輸入框的容器
+        let lastFourDigitsInput; // 新增：末四碼輸入框本身
 
         /**
-         * 根據組別名稱，返回一個用於排序的數字權重。
+         * 初始化所有 DOM 元素和事件監聽器。
          */
-        function getGroupNumericalOrder(groupName) {
-            if (groupName.includes('主領班')) {
-                return 1000; 
-            }
-            const match = groupName.match(/(?:第)?(一|二|三|四|五|六|七|八|九|十)組/);
+        window.onload = function() {
+            purchasedTicketsInput = document.getElementById('purchasedTickets');
+            totalAmountDisplay = document.getElementById('totalAmount');
+            freeTicketsDisplay = document.getElementById('freeTickets');
+            totalTicketsReceivedDisplay = document.getElementById('totalTicketsReceived');
+            submitButton = document.getElementById('submitButton');
+            submissionMessageDiv = document.getElementById('submissionMessage');
+            form = document.getElementById('orderForm');
 
-            if (match) {
-                const chineseNum = match[1];
-                const numberOrder = chineseNumeralToNumber(chineseNum);
-                
-                if (numberOrder >= 1 && numberOrder <= 10) {
-                    return numberOrder;
-                }
-            }
-            return 100; 
-        }
-
-        // --- 核心 Apps Script 互動與名單處理 ---
-
-        /**
-         * 啟動函式：向 Apps Script 請求組別與姓名名單資料
-         */
-        function fetchTeamsData() {
-            loadingStatus.innerText = '正在透過 Apps Script 載入名單資料...';
-            google.script.run
-                .withSuccessHandler(handleTeamsDataSuccess)
-                .withFailureHandler(handleFailure)
-                .getTeamsData();
-        }
-
-        /**
-         * 處理名單資料成功回傳
-         */
-        function handleTeamsDataSuccess(data) {
-            teamsData = data;
+            // 新增 DOM 引用
+            paymentMethodSelect = document.getElementById('paymentMethod');
+            lastFourDigitsContainer = document.getElementById('lastFourDigitsContainer');
+            lastFourDigitsInput = document.getElementById('lastFourDigits');
             
-            if (Object.keys(teamsData).length === 0) {
-                const message = 'Apps Script 成功執行，但名單中找不到任何有效的組別或姓名資料，請確認資料在 **Code.gs** 設定的**名單**工作表 A、B 兩欄。';
-                loadingStatus.innerHTML = `<span style="color:orange;">${message}</span>`;
-                showModal('名單警告', message);
+            // 【修正】新增表單提交事件監聽器
+            form.addEventListener('submit', handleFormSubmit); 
+
+            // 初始載入時執行一次計算和顯示控制
+            updateCalculation();
+            toggleLastFourDigits(); // 確保初始狀態 (末四碼欄位) 是隱藏的
+        };
+
+        /**
+         * 增加購買張數。
+         */
+        function incrementTickets() {
+            let current = parseInt(purchasedTicketsInput.value) || 0;
+            purchasedTicketsInput.value = current + 1;
+            updateCalculation();
+        }
+
+        /**
+         * 減少購買張數，最小為 1。
+         */
+        function decrementTickets() {
+            let current = parseInt(purchasedTicketsInput.value) || 1;
+            if (current > 1) {
+                purchasedTicketsInput.value = current - 1;
+                updateCalculation();
+            }
+        }
+
+        /**
+         * 根據購買張數更新總金額和票券數量。
+         * 採用嚴格的「固定套餐組合」定價邏輯: 優先使用 5 張、再使用 3 張、最後使用 1 張的價格。
+         */
+        function updateCalculation() {
+            // 獲取值，如果不是有效數字或空值，則視為 0
+            let purchasedTickets = parseInt(purchasedTicketsInput.value) || 0;
+            
+            if (purchasedTickets <= 0) {
+                totalAmountDisplay.textContent = '0';
+                freeTicketsDisplay.textContent = '0';
+                totalTicketsReceivedDisplay.textContent = '0';
+                document.getElementById('hiddenFreeTickets').value = 0;
+                document.getElementById('hiddenTotalTicketsReceived').value = 0;
+                document.getElementById('hiddenTotalAmount').value = 0;
+                submitButton.disabled = true;
                 return;
             }
 
-            loadingStatus.innerText = '名單載入完成，請選擇科目。';
-            loadingStatus.style.color = '#4CAF50';
-            setupEventListeners(); 
-            populateGroupOptions(); 
+            let remainingTickets = purchasedTickets;
+            let totalAmount = 0;
+            let freeTickets = 0;
+
+            // 1. 計算 5 張套票區塊 (買五送一)
+            const blocksOf5 = Math.floor(remainingTickets / BLOCK_SIZE);
+            totalAmount += blocksOf5 * PRICE_5_TICKETS;
+            freeTickets += blocksOf5; // 每 5 張贈送 1 張
+            remainingTickets %= BLOCK_SIZE;
+
+            // 2. 計算剩餘的 3 張套票
+            const blocksOf3 = Math.floor(remainingTickets / 3);
+            totalAmount += blocksOf3 * PRICE_3_TICKETS;
+            remainingTickets %= 3;
+
+            // 3. 計算剩餘的 1 張單票 (餘數只會是 1 或 2)
+            totalAmount += remainingTickets * PRICE_1_TICKET;
+
+            // 4. 最終計算
+            const totalTicketsReceived = purchasedTickets + freeTickets;
+
+            // 5. 更新前端顯示
+            totalAmountDisplay.textContent = totalAmount.toLocaleString('zh-TW'); // 格式化金額
+            freeTicketsDisplay.textContent = freeTickets;
+            totalTicketsReceivedDisplay.textContent = totalTicketsReceived;
+
+            // 將計算結果儲存為隱藏欄位，以便於提交
+            document.getElementById('hiddenFreeTickets').value = freeTickets;
+            document.getElementById('hiddenTotalTicketsReceived').value = totalTicketsReceived;
+            document.getElementById('hiddenTotalAmount').value = totalAmount;
+
+            // 檢查購買數量是否合理
+            submitButton.disabled = purchasedTickets <= 0;
         }
 
         /**
-         * 設置下拉選單的事件監聽器
+         * 根據付款方式顯示或隱藏「付款末四碼」欄位。
          */
-        function setupEventListeners() {
-            quizTypeSelect.addEventListener('change', (e) => {
-                selectedQuizType = e.target.value;
-                selectedGroup = '';
-                selectedName = '';
-                groupSelect.selectedIndex = 0; 
-                nameSelect.innerHTML = '<option value="" disabled selected>請選擇姓名</option>';
-                nameSelect.disabled = true;
-                groupSelect.disabled = false; 
-                checkStartButton();
-            });
+        function toggleLastFourDigits() {
+            const selectedMethod = paymentMethodSelect.value;
+            const isBankTransfer = selectedMethod === '銀行轉帳';
 
-            groupSelect.addEventListener('change', (e) => {
-                selectedGroup = e.target.value;
-                populateNameOptions(selectedGroup);
-                checkStartButton();
-            });
+            if (isBankTransfer) {
+                lastFourDigitsContainer.classList.remove('hidden');
+                // 當欄位顯示時，設定為必填
+                lastFourDigitsInput.required = true;
+            } else {
+                lastFourDigitsContainer.classList.add('hidden');
+                // 當欄位隱藏時，移除必填屬性並清空值，避免提交錯誤
+                lastFourDigitsInput.required = false;
+                lastFourDigitsInput.value = '';
+            }
+        }
+
+        /**
+         * 處理表單提交事件，發送數據到 Apps Script 服務端點。
+         * @param {Event} event 提交事件。
+         */
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+
+            // 獲取所有表單數據
+            const formData = {
+                purchaserName: document.getElementById('purchaserName').value,
+                phoneNumber: document.getElementById('phoneNumber').value,
+                region: document.getElementById('region').value,
+                lineId: document.getElementById('lineId').value,
+                referrer: document.getElementById('referrer').value,
+                purchasedTickets: parseInt(document.getElementById('purchasedTickets').value) || 0,
+                paymentMethod: document.getElementById('paymentMethod').value,
+                // 即使隱藏，如果非銀行轉帳，值也會是空字串，符合需求
+                lastFourDigits: document.getElementById('lastFourDigits').value,
+                
+                // 讀取隱藏的計算結果
+                freeTickets: parseInt(document.getElementById('hiddenFreeTickets').value) || 0,
+                totalTicketsReceived: parseInt(document.getElementById('hiddenTotalTicketsReceived').value) || 0,
+                totalAmount: parseInt(document.getElementById('hiddenTotalAmount').value) || 0
+            };
             
-            nameSelect.addEventListener('change', (e) => {
-                selectedName = e.target.value;
-                checkStartButton();
-            });
-        }
+            // 基礎驗證 (可擴充更多驗證邏輯)
+            if (!formData.purchaserName || !formData.phoneNumber || formData.purchasedTickets <= 0) {
+                showMessage('error', '請填寫所有必填欄位 (姓名、手機、購買張數)。');
+                return;
+            }
 
-        /**
-         * 填充組別選項
-         */
-        function populateGroupOptions() {
-            groupSelect.innerHTML = '<option value="" disabled selected>請選擇組別</option>';
-            let groups = Object.keys(teamsData);
+            // 設定提交狀態
+            submitButton.disabled = true;
+            submitButton.textContent = '處理中... 請稍候';
+            showMessage('loading', '正在將您的訂單提交至伺服器...');
 
-            groups.sort((a, b) => {
-                const numA = getGroupNumericalOrder(a);
-                const numB = getGroupNumericalOrder(b);
-
-                if (numA !== numB) {
-                    return numA - numB;
-                }
-                return a.localeCompare(b, 'zh-TW', { sensitivity: 'base' });
-            });
-
-            groups.forEach(group => {
-                const option = document.createElement('option');
-                option.value = group;
-                option.text = group;
-                groupSelect.appendChild(option);
-            });
-        }
-
-        /**
-         * 根據選擇的組別，填充對應的姓名選項
-         */
-        function populateNameOptions(group) {
-            nameSelect.innerHTML = '<option value="" disabled selected>請選擇姓名</option>';
-            if (teamsData[group]) {
-                teamsData[group].forEach(name => {
-                    const option = document.createElement('option');
-                    option.value = name;
-                    option.text = name;
-                    nameSelect.appendChild(option);
+            // 發送 POST 請求到 Apps Script
+            try {
+                // Apps Script 偏好 Content-Type: text/plain 以避免複雜的預檢 (pre-flight)
+                const response = await fetch(FORM_URL, {
+                    method: 'POST',
+                    mode: 'cors', // 允許 CORS
+                    cache: 'no-cache',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8', 
+                    },
+                    body: JSON.stringify(formData) // 將數據轉為 JSON 字串傳送
                 });
-                nameSelect.disabled = false;
-            } else {
-                nameSelect.disabled = true;
+                
+                // 解析 Apps Script 回傳的 JSON 結果
+                const result = await response.json(); 
+
+                if (result.status === 200) {
+                    showMessage('success', `🎉 訂單送出成功！<br>訊息: ${result.message}<br><span class="text-sm font-normal mt-1">（請注意：這只是系統記錄，最終訂單確認以專人通知為主）</span>`);
+                    submitButton.textContent = '✅ 訂單已成功送出';
+                    form.reset(); // 清空表單
+                    purchasedTicketsInput.value = 1; // 重設為 1
+                    updateCalculation(); // 重設計算顯示
+                    toggleLastFourDigits(); // 重設末四碼欄位狀態
+                } else {
+                    showMessage('error', `⚠️ 提交失敗 (${result.status})。<br>訊息: ${result.message}`);
+                    submitButton.disabled = false;
+                    submitButton.textContent = '請重試送出訂單';
+                }
+
+            } catch (error) {
+                console.error("Fetch Error:", error);
+                showMessage('error', `❌ 網路錯誤或伺服器無回應。<br>請檢查您的 Apps Script 部署狀態或網路連線。`);
+                submitButton.disabled = false;
+                submitButton.textContent = '請重試送出訂單';
             }
-        }
-
-        /**
-         * 檢查所有選擇器是否都已選定，並啟用/禁用開始測驗按鈕
-         */
-        function checkStartButton() {
-            if (selectedQuizType && selectedGroup && selectedName) {
-                startBtn.disabled = false;
-                loadingStatus.innerText = '所有資訊皆已選定，可以開始測驗。';
-            } else {
-                startBtn.disabled = true;
-            }
-        }
-
-        // --- 測驗流程函式 ---
-
-        /**
-         * 開始測驗流程：載入「隨堂」和「科目」兩份考卷
-         */
-        function startQuiz() {
-            selectionContainer.style.display = 'none';
-            quizContainer.style.display = 'block';
-            
-            quizContainer.innerHTML = '<div class="loading-text" id="quiz-loading-message">正在透過 Apps Script 載入**必做隨堂題目**... (步驟 1/2)</div>';
-            
-            const quizTypeResult = document.getElementById('quiz-type-result');
-            if (quizTypeResult) {
-                quizTypeResult.innerText = `隨堂 + ${selectedQuizType}`;
-            }
-
-            google.script.run
-                .withSuccessHandler(handleMandatoryQuizSuccess)
-                .withFailureHandler(handleFailure)
-                .getQuizData('隨堂'); 
         }
         
         /**
-         * 處理隨堂考卷 (Mandatory) 成功回傳
+         * 顯示不同狀態的訊息。
+         * @param {'loading'|'success'|'error'} type 訊息類型。
+         * @param {string} message 訊息內容 (支持 HTML)。
          */
-        function handleMandatoryQuizSuccess(mandatoryData) {
-            quizData = mandatoryData; 
+        function showMessage(type, message) {
+            submissionMessageDiv.innerHTML = message;
             
-            const loadingMsg = document.getElementById('quiz-loading-message');
-            if (loadingMsg) {
-                 loadingMsg.innerHTML = `✅ 隨堂題目載入完成。正在載入**${selectedQuizType}**的題目... (步驟 2/2)`;
+            switch (type) {
+                case 'loading':
+                    submissionMessageDiv.className = 'mt-6 p-4 rounded-xl bg-blue-100 text-blue-700 shadow-md animate-pulse';
+                    break;
+                case 'success':
+                    submissionMessageDiv.className = 'mt-6 p-4 rounded-xl bg-green-100 text-green-800 font-bold shadow-md';
+                    break;
+                case 'error':
+                    submissionMessageDiv.className = 'mt-6 p-4 rounded-xl bg-red-100 text-red-800 font-bold shadow-md';
+                    break;
             }
-
-            google.script.run
-                .withSuccessHandler(handleOptionalQuizSuccess)
-                .withFailureHandler(handleFailure)
-                .getQuizData(selectedQuizType);
+            submissionMessageDiv.scrollIntoView({ behavior: 'smooth' });
         }
-
-        /**
-         * 處理選擇科目考卷 (Optional) 成功回傳
-         */
-        function handleOptionalQuizSuccess(optionalData) {
-            quizData = [...quizData, ...optionalData]; 
-
-            if (quizData.length > 0) {
-                renderQuiz(); 
-            } else {
-                quizContainer.innerHTML = '<div class="loading-text" style="color:red;">無法載入題目，請檢查 Code.gs 中的 QUIZ_SHEETS_NAMES 設定是否正確，以及題庫工作表是否存在。</div>';
-            }
-        }
-
-        /**
-         * 根據 quizData 渲染題目到網頁上
-         */
-        function renderQuiz() {
-            quizContainer.innerHTML = '';
-            let quizHTML = '';
-
-            quizData.forEach((item, index) => {
-                const questionNumber = index + 1;
-                let optionsHTML = '';
-                const inputType = item.type === 'single' ? 'radio' : 'checkbox';
-                
-                // 處理題目提示 (加分題)
-                const bonusLabel = item.isBonus ? '<span style="color: orange; font-weight: normal; margin-left: 10px;"></span>' : '';
-                
-                // 處理圖片顯示
-                let imageHTML = '';
-                if (item.imageUrl) {
-                    const isDirectLink = /\.(jpg|jpeg|png|gif|svg|webp|bmp|tiff)$/i.test(item.imageUrl);
-                    
-                    if (isDirectLink) {
-                        imageHTML = `<img src="${item.imageUrl}" alt="題目圖片" onerror="this.onerror=null; this.src='https://placehold.co/400x150/ffcccc/c00000?text=圖片載入失敗！'; this.style.border='2px dashed #c00000';">`;
-                    } else {
-                        imageHTML = `
-                            <div style="background-color: #fcebeb; border: 1px solid #f2c7c7; padding: 10px; border-radius: 5px; text-align: center;">
-                                <p style="color: #c72c2c; font-weight: bold;">圖片無法顯示</p>
-                                <p style="font-size: 0.9em; margin: 5px 0;">您貼上的網址不是圖片檔案本身。請使用一個圖片直連網址。</p>
-                            </div>
-                        `;
-                    }
-                }
-
-                if (item.type === 'single' || item.type === 'multiple') {
-                    const shuffledOptions = shuffleArray([...item.options]); 
-                    
-                    shuffledOptions.forEach((option) => {
-                        optionsHTML += `<label><input type="${inputType}" name="q${questionNumber}" value="${option}"> ${option}</label>`;
-                    });
-                    
-                    quizHTML += `
-                        <div class="question" id="q${questionNumber}">
-                            <p>${questionNumber}. ${item.question} <span style="font-size: 0.8em; color: #888;">(${item.score.toFixed(1)}分)</span>${bonusLabel}</p>
-                            ${imageHTML}
-                            <div class="options">
-                                ${optionsHTML}
-                            </div>
-                            <div class="answer-feedback"></div>
-                        </div>
-                    `;
-                } else if (item.type === 'fill') {
-                    quizHTML += `
-                        <div class="question" id="q${questionNumber}">
-                            <p>${questionNumber}. ${item.question} <span style="font-size: 0.8em; color: #888;">(${item.score.toFixed(1)}分)</span>${bonusLabel}</p>
-                            ${imageHTML}
-                            <input type="text" class="fill-in-the-blank" id="q${questionNumber}_answer">
-                            <div class="answer-feedback"></div>
-                        </div>
-                    `;
-                }
-            });
-
-            quizContainer.innerHTML = quizHTML;
-            buttonGroup.style.display = 'block'; 
-        }
-
-        /**
-         * 計算分數，顯示結果，並準備提交資料 (已包含「加分題有寫就有分」的特殊規則，結果只顯示總分)
-         */
-        function calculateScore() {
-            let regularScore = 0;   
-            let bonusScore = 0;     
-            let totalScore = 0;     
-            
-            userAnswers = []; // 簡化數據，用於後端展開
-            const wrongQuestions = [];
-            
-            quizData.forEach((item, index) => {
-                const qId = `q${index + 1}`;
-                const questionElement = document.getElementById(qId);
-                
-                if (!questionElement) return;
-
-                const feedbackElement = questionElement.querySelector('.answer-feedback');
-                const isBonus = item.isBonus === true; 
-                let isCorrect = false;      
-                let hasAnswered = false;    
-                let userAnswerText = '';
-                let isScored = '否';
-
-                // --- 判斷作答是否正確及是否有作答 ---
-                if (item.type === 'single') {
-                    const userAnswer = document.querySelector(`input[name="${qId}"]:checked`);
-                    userAnswerText = userAnswer ? userAnswer.value : '未作答';
-                    hasAnswered = !!userAnswer; 
-                    if (userAnswer && userAnswer.value === item.answer[0]) {
-                        isCorrect = true;
-                    }
-                } else if (item.type === 'multiple') {
-                    const userAnswersArr = Array.from(document.querySelectorAll(`input[name="${qId}"]:checked`)).map(el => el.value).sort();
-                    const correctAnswersSorted = item.answer.sort();
-                    userAnswerText = userAnswersArr.join(', ') || '未作答';
-                    hasAnswered = userAnswersArr.length > 0; 
-                    if (JSON.stringify(userAnswersArr) === JSON.stringify(correctAnswersSorted)) {
-                        isCorrect = true;
-                    }
-                } else if (item.type === 'fill') {
-                    const userAnswerInput = document.getElementById(`${qId}_answer`);
-                    userAnswerText = userAnswerInput ? userAnswerInput.value.trim() : '未作答';
-                    hasAnswered = userAnswerText.length > 0; 
-                    if (item.answer.map(a => a.toLowerCase()).includes(userAnswerText.toLowerCase())) {
-                        isCorrect = true;
-                    }
-                }
-
-                // --- 根據作答結果更新分數和回饋訊息 ---
-                let scoreText = '';
-                
-                if (isBonus) {
-                    // ** 加分題的特殊邏輯：只要有寫，就給分 **
-                    if (hasAnswered) {
-                        bonusScore += item.score; 
-                        scoreText = `<span class="correct">✔ 答題成功</span><br><span style="color: #ff9800;">獲得${item.score.toFixed(1)} </span>`;
-                        isScored = '是';
-                    } else {
-                        scoreText = `<span class="incorrect">✘ 未作答</span>`;
-                        wrongQuestions.push(index + 1);
-                        isScored = '否';
-                    }
-                    
-                    const correctAnswerText = item.answer.join(', ');
-                    feedbackElement.innerHTML = `${scoreText}
-                    
-                } else {
-                    // ** 標準題的正常邏輯：答對才給分 **
-                    if (isCorrect) {
-                        regularScore += item.score; 
-                        feedbackElement.innerHTML = `<span class="correct">✔ 正確</span><br><span style="color: #ff9800;">獲得 ${item.score.toFixed(1)} 分`;
-                        isScored = '是';
-                    } else {
-                        wrongQuestions.push(index + 1);
-                        const correctAnswerText = item.answer.join(', ');
-                        feedbackElement.innerHTML = `<span class="incorrect">✘ 錯誤</span>。正確答案是：${correctAnswerText}`;
-                        isScored = '否';
-                    }
-                }
-
-                // 記錄每題的簡化數據，用於後端展開
-                userAnswers.push({
-                    qNum: index + 1,
-                    isScored: isScored, // 是否得分
-                    user: userAnswerText,
-                    correct: item.answer.join(', '),
-                });
-            });
-
-            totalScore = regularScore + bonusScore; 
-
-            // 禁用所有輸入元素，防止再次修改答案
-            const allInputs = document.querySelectorAll('#quiz-container input');
-            allInputs.forEach(input => {
-                input.disabled = true;
-            });
-
-            // 顯示最終結果區
-            document.getElementById('group-result').innerText = selectedGroup;
-            document.getElementById('name-result').innerText = selectedName;
-            
-            // 這裡已修改：只顯示總分
-            document.getElementById('score').innerHTML = 
-                `${totalScore.toFixed(1)} 分`;
-            
-            const wrongQuestionsElement = document.getElementById('wrong-questions');
-            if (wrongQuestions.length === 0) {
-                 wrongQuestionsElement.innerText = '恭喜你！所有題目都獲得分數！';
-            } else if (wrongQuestions.length > 0) {
-                // 這裡只顯示未得分的題目編號 (標準題答錯 + 加分題未作答)
-                wrongQuestionsElement.innerText = `你沒有得分的題目是第 ${wrongQuestions.join('、')} 題`;
-            }
-            
-            document.querySelector('.result-box').style.display = 'block';
-            document.querySelector('.result-box').scrollIntoView({ behavior: 'smooth' });
-
-            // 提交答案到 Apps Script
-            sendAnswersToGoogleSheet(totalScore, regularScore, bonusScore); 
-        }
-
-        /**
-         * 將成績和作答詳情傳送給 Apps Script 儲存
-         */
-        function sendAnswersToGoogleSheet(finalScore, regularScore, bonusScore) {
-            const submitButton = document.getElementById('submit-btn');
-            submitButton.disabled = true;
-            submitButton.innerText = '正在傳送...';
-            
-            const quizTypeDisplay = document.getElementById('quiz-type-result').innerText;
-
-            const dataToSend = {
-                group: selectedGroup,
-                name: selectedName,
-                score: finalScore.toFixed(1),      
-                regularScore: regularScore.toFixed(1), 
-                bonusScore: bonusScore.toFixed(1),   
-                quizType: quizTypeDisplay,
-                answers: userAnswers // 簡化後的答案陣列
-            };
-
-            google.script.run
-                .withSuccessHandler(handleSubmissionSuccess)
-                .withFailureHandler(handleSubmissionFailure)
-                .saveScore(dataToSend);
-        }
-
-        /**
-         * 處理成績提交成功
-         */
-        function handleSubmissionSuccess(result) {
-            document.getElementById('submit-btn').innerText = '成績已送出';
-            showModal('提交成功', result);
-        }
-
-        /**
-         * 處理成績提交失敗
-         */
-        function handleSubmissionFailure(error) {
-            const submitButton = document.getElementById('submit-btn');
-            submitButton.disabled = false;
-            submitButton.innerText = '送出答案 (失敗，請重試)';
-            showModal('提交失敗', `成績無法記錄到試算表。錯誤訊息：${error.message}`);
-            console.error('成績提交失敗:', error);
-        }
-
-
-        // --- 網頁載入完成，啟動資料抓取 ---
-        window.onload = fetchTeamsData;
     </script>
+</head>
+<body class="p-4 md:p-8 min-h-screen flex items-center justify-center">
+
+    <div class="w-full max-w-2xl bg-white shadow-2xl rounded-2xl p-6 md:p-10 border border-gray-100">
+        
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-extrabold text-indigo-700">2026好運FUN馬來</h1>
+            <p class="mt-2 text-gray-500"> </p>
+            
+            <!-- 票價優惠方案區塊 (已更新為列表格式) -->
+            <div class="mt-4 p-4 bg-indigo-50 rounded-lg shadow-inner">
+                <h2 class="text-lg font-bold text-indigo-700 mb-2">票價優惠方案</h2>
+                <ul class="space-y-1 text-gray-700 list-disc list-inside ml-4">
+                    <li class="text-sm">單張購買：<span class="font-bold text-blue-600">NT$ 399 / 張</span></li>
+                    <li class="text-sm">三張套票：<span class="font-bold text-blue-600">NT$ 1068 / 3 張</span> (平均 $356)</li>
+                    <li class="text-sm">
+                        <span class="font-extrabold text-green-700">買五送一</span>：
+                        <span class="font-bold text-blue-600">NT$ 1688 / 5 張</span> 
+                        <span class="text-gray-500">(實得 6 張，平均約 $281)</span>
+                    </li>
+                </ul>
+                <p class="mt-3 text-sm font-bold text-red-600 border-t border-indigo-200 pt-2">
+                    待補
+                </p>
+            </div>
+            <!-- 結束 票價優惠方案區塊 -->
+            
+        </header>
+
+        <form id="orderForm" class="space-y-6">
+            
+            <!-- 區塊 1: 基本聯絡資訊 -->
+            <fieldset class="border p-5 rounded-xl space-y-4 bg-gray-50/50">
+                <legend class="text-lg font-semibold text-gray-700 px-2">購票人資訊</legend>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="purchaserName" class="block text-sm font-medium text-gray-700 required-label">購票人姓名</label>
+                        <input type="text" id="purchaserName" name="purchaserName" required
+                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3">
+                    </div>
+                    <div>
+                        <label for="phoneNumber" class="block text-sm font-medium text-gray-700 required-label">手機號碼</label>
+                        <input type="tel" id="phoneNumber" name="phoneNumber" required pattern="[0-9]{10}" placeholder="例如: 0912345678"
+                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- 所在區域已改為文字輸入 -->
+                    <div>
+                        <label for="region" class="block text-sm font-medium text-gray-700">區域</label>
+                        <input type="text" id="region" name="region" placeholder="請輸入所屬區域"
+                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3">
+                    </div>
+                    <div>
+                        <label for="lineId" class="block text-sm font-medium text-gray-700">Line ID (選填)</label>
+                        <input type="text" id="lineId" name="lineId"
+                               class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="referrer" class="block text-sm font-medium text-gray-700">推薦人姓名 (選填)</label>
+                    <input type="text" id="referrer" name="referrer"
+                           class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3">
+                </div>
+            </fieldset>
+
+            <!-- 區塊 2: 票券數量與計算 -->
+            <fieldset class="border p-5 rounded-xl space-y-4 bg-indigo-50/50">
+                <legend class="text-lg font-semibold text-gray-700 px-2">票券數量計算</legend>
+
+                <div>
+                    <label for="purchasedTickets" class="block text-sm font-bold text-indigo-700 required-label">
+                        購買張數
+                    </label>
+                    <!-- 購買張數：已移除 readonly，並新增 oninput 讓使用者可手動輸入 -->
+                    <div class="flex mt-1 rounded-lg overflow-hidden border border-indigo-300 shadow-md">
+                        <button type="button" onclick="decrementTickets()" 
+                                class="p-3 bg-indigo-200 text-indigo-700 font-extrabold text-3xl hover:bg-indigo-300 transition duration-150 w-1/4 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-8 h-8">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
+                            </svg>
+                        </button>
+                        <input type="number" id="purchasedTickets" name="purchasedTickets" value="1" min="1" required oninput="updateCalculation()"
+                               class="block w-2/4 bg-white border-x border-indigo-300 focus:outline-none p-3 text-3xl text-center font-extrabold appearance-none text-indigo-800">
+                        <button type="button" onclick="incrementTickets()" 
+                                class="p-3 bg-indigo-200 text-indigo-700 font-extrabold text-3xl hover:bg-indigo-300 transition duration-150 w-1/4 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-8 h-8">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center p-3 bg-white rounded-lg shadow-sm">
+                        <span class="text-sm font-medium text-gray-600">免費贈送張數 (每 5 張贈 1 張)</span>
+                        <span id="freeTickets" class="text-xl font-bold text-green-600">0</span>
+                    </div>
+
+                    <div class="flex justify-between items-center p-3 bg-white rounded-lg shadow-sm">
+                        <span class="text-sm font-medium text-gray-600">最終獲得總票數 (付費 + 贈送)</span>
+                        <span id="totalTicketsReceived" class="text-xl font-bold text-indigo-600">1</span>
+                    </div>
+
+                    <div class="flex justify-between items-center p-4 bg-indigo-700 text-white rounded-lg shadow-lg">
+                        <span class="text-lg font-bold">應付總金額 (TWD)</span>
+                        <span class="text-3xl font-extrabold">$<span id="totalAmount">399</span></span>
+                    </div>
+                </div>
+                
+                <!-- 隱藏欄位用於提交計算結果給 Apps Script -->
+                <input type="hidden" id="hiddenFreeTickets" name="freeTickets">
+                <input type="hidden" id="hiddenTotalTicketsReceived" name="totalTicketsReceived">
+                <input type="hidden" id="hiddenTotalAmount" name="totalAmount">
+            </fieldset>
+
+            <!-- 區塊 3: 付款資訊 -->
+            <fieldset class="border p-5 rounded-xl space-y-4 bg-gray-50/50">
+                <legend class="text-lg font-semibold text-gray-700 px-2">付款資訊</legend>
+
+                <div>
+                    <label for="paymentMethod" class="block text-sm font-medium text-gray-700 required-label">付款方式</label>
+                    <select id="paymentMethod" name="paymentMethod" required onchange="toggleLastFourDigits()"
+                            class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3">
+                        <option value="">請選擇付款方式</option>
+                        <!-- 根據使用者要求更新選項 -->
+                        <option value="現金支付">現金支付</option>
+                        <option value="銀行轉帳">銀行轉帳</option>
+                    </select>
+                </div>
+                
+                <!-- 新增 ID 和 hidden class，並將 required 屬性移除，由 JS 控管 -->
+                <div id="lastFourDigitsContainer" class="hidden">
+                    <label for="lastFourDigits" class="block text-sm font-medium text-gray-700 required-label">
+                        付款末四碼 / 交易序號
+                    </label>
+                    <input type="text" id="lastFourDigits" name="lastFourDigits" maxlength="4" placeholder="例如: 銀行轉帳末四碼或交易編號"
+                           class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-3">
+                </div>
+            </fieldset>
+
+            <!-- 提交按鈕 -->
+            <button type="submit" id="submitButton" disabled
+                    class="w-full py-4 px-4 bg-indigo-600 text-white font-bold text-lg rounded-xl shadow-lg hover:bg-indigo-700 transition duration-150 disabled:bg-indigo-300">
+                請輸入購買張數後送出訂單
+            </button>
+        </form>
+
+        <!-- 提交結果訊息區 -->
+        <div id="submissionMessage" class="mt-6">
+            <!-- 訊息將會顯示在這裡 -->
+        </div>
+
+    </div>
 
 </body>
 </html>
-
-
-
-
